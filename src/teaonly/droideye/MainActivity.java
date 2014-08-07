@@ -42,6 +42,7 @@ import android.os.Looper;
 import android.media.AudioFormat;
 import android.media.MediaRecorder;
 import android.media.AudioRecord;
+import android.speech.tts.TextToSpeech;
 import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -79,6 +80,8 @@ public class MainActivity extends Activity
     private AudioRecord audioCapture = null;
     private StreamingLoop audioLoop = null;
 
+    TextToSpeech ttobj;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,6 +113,17 @@ public class MainActivity extends Activity
 
         initAudio();
         initCamera();
+
+        ttobj=new TextToSpeech(getApplicationContext(),
+                new TextToSpeech.OnInitListener() {
+                    @Override
+                    public void onInit(int status) {
+                        if(status != TextToSpeech.ERROR){
+                            ttobj.setLanguage(Locale.UK);
+                        }
+                    }
+                });
+
     }
     
     @Override
@@ -152,6 +166,11 @@ public class MainActivity extends Activity
         //cameraView_.Release();
         audioLoop.ReleaseLoop();
         audioCapture.release();
+
+        if(ttobj !=null){
+            ttobj.stop();
+            ttobj.shutdown();
+        }
     
         //System.exit(0);
         finish();
@@ -227,6 +246,7 @@ public class MainActivity extends Activity
                 webServer = new TeaServer(8080, this); 
                 webServer.registerCGI("/cgi/query", doQuery);
                 webServer.registerCGI("/cgi/setup", doSetup);
+                webServer.registerCGI("/cgi/sayit", doSayIt);
                 webServer.registerCGI("/stream/live.jpg", doCapture);
                 webServer.registerCGI("/stream/live.mp3", doBroadcast);
             }catch (IOException e){
@@ -288,7 +308,22 @@ public class MainActivity extends Activity
         public InputStream streaming(Properties parms) {
             return null;
         }    
-    }; 
+    };
+
+    private TeaServer.CommonGatewayInterface doSayIt = new TeaServer.CommonGatewayInterface () {
+        @Override
+        public String run(Properties parms) {
+            String msg = parms.getProperty("sayIt");
+            ttobj.speak(msg, TextToSpeech.QUEUE_FLUSH, null);
+            return "OK";
+        }
+
+        @Override
+        public InputStream streaming(Properties parms) {
+            return null;
+        }
+    };
+
 
     private TeaServer.CommonGatewayInterface doSetup = new TeaServer.CommonGatewayInterface () {
         @Override

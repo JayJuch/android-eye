@@ -126,6 +126,17 @@ var doChangeRes = function () {
     });
 };
 
+
+var sendSayit = function () {
+    var msg = $("#text_message").val();
+    $.ajax({
+        type: "GET",
+        url: basicURL + "cgi/sayit",
+        cache: false,
+        data: "sayIt=" + escape(msg)
+    });
+};
+
 var initAudioPlayer = function () {
     // install flowplayer into container
     // http://flash.flowplayer.org/
@@ -161,7 +172,9 @@ $("#page_main").live("pageinit", function() {
 
     $("#btn_play").button('disable');
     $("#btn_play").bind("click", playClick);
-    
+
+    $("#button_sayit").bind("click", sendSayit);
+
     initAudioPlayer();
 
     $.ajax({
